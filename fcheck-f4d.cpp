@@ -68,18 +68,35 @@ enum {
 };
 
 // Read a file in chunks of 8 MBytes
-const int BUFSIZE = 8*1024*1024;
+const int BUFSIZE = 32*1024*1024;
 
 // Matrix template
 template <class T, size_t ROW, size_t COL>
 using Matrix = std::array<std::array<T, COL>, ROW>;
 
+// Print matrix to file.
+template <class T>
+void printMatrix(T & t, size_t rows, size_t columns, const std::string& fileName)
+{
+  std::ofstream matrixF (fileName);
+  if (matrixF.is_open())
+  {
+    for(size_t i = 0;i < rows; ++i) {
+      for(size_t j = 0;j < columns; ++j) {
+        matrixF << static_cast<unsigned>(t[i][j]) << " ";
+      }
+      matrixF << "\n";
+    }
+  } 
+  else std::cout << "Unable to open file\n";
+}
+
 // Processing matrix. Basically the analysis part with writing to file
 template <class T>
-std::pair<unsigned, unsigned> processMatrix(T & t, size_t rows, size_t columns)
+std::pair<unsigned, unsigned> processMatrix(T & t, size_t rows, size_t columns, const std::string& fileName)
 {
   std::pair<unsigned, unsigned> minmax(0, 0);
-  std::ofstream matrixF ("fei4-matrix.txt");
+  std::ofstream matrixF (fileName);
   if (matrixF.is_open())
   {
     float xbar = 0;
@@ -253,7 +270,8 @@ int main( int argc, char *argv[] )
   std::vector<uint8_t>  lv1id, bcid, addr, value, 
                              ser_code, ser_num, column, row,
                              tot, cycles_array;  
-  Matrix<uint8_t, 80, 336> arrayb, arrayt;
+  Matrix<uint8_t, 80, 336>  arrayb;
+  Matrix<uint16_t, 80, 336> arrayt;
   unsigned lv1id_new = 1000;
   unsigned cycles = 0;
   
@@ -339,7 +357,9 @@ int main( int argc, char *argv[] )
   }
 
   // Process matrix and print min/max triggered. 
-  std::pair<unsigned, unsigned> minmax = processMatrix( arrayb, 80, 336 );
+  std::pair<unsigned, unsigned> minmax = processMatrix( arrayb, 80, 336 , "fei4-matrix-arrayb.txt");
+  // Print out tots into a file.
+  printMatrix( arrayt, 80, 336, "fei4-matrix-arrayt.txt" );
   std::cout << "Min triggered: " << minmax.first << " | Max triggered: " << minmax.second;
 
 }
